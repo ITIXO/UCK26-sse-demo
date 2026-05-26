@@ -78,7 +78,38 @@
     .player-label { font-size: 0.75rem; color: #7c3aed; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
     .player-name  { font-size: 1.1rem; font-weight: 700; color: #1e1b4b; }
 
-    /* ── Joystick ────────────────────────────────────────── */
+    /* ── D-Pad (fine pointer: mouse/trackpad) ───────────── */
+    .dpad-large {
+        display: grid;
+        grid-template-columns: repeat(3, var(--btn-sz, 82px));
+        grid-template-rows:    repeat(3, var(--btn-sz, 82px));
+        gap: 10px;
+    }
+    .arrow-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 18px;
+        border: 2px solid #c4b5fd;
+        background: linear-gradient(145deg, #ede9fe, #ddd6fe);
+        font-size: 2rem;
+        color: #4c1d95;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: background 0.08s, transform 0.06s, box-shadow 0.08s;
+        box-shadow: 0 4px 12px rgba(99,102,241,.2), inset 0 1px 0 rgba(255,255,255,.6);
+    }
+    .arrow-btn:active,
+    .arrow-btn.pressing {
+        background: linear-gradient(145deg, #7c3aed, #6d28d9);
+        color: #fff;
+        border-color: #7c3aed;
+        transform: scale(0.92);
+        box-shadow: 0 2px 6px rgba(99,102,241,.3);
+    }
+    .dpad-large .gap { visibility: hidden; }
+
+    /* ── Joystick (coarse pointer: touch) ────────────────── */
     .joystick-base {
         position: relative;
         width: 200px;
@@ -140,6 +171,10 @@
         -webkit-tap-highlight-color: transparent;
     }
     .leave-btn:active { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+
+    /* ── Show/hide controls by pointer type ─────────────── */
+    @@media (pointer: fine)   { .joystick-base { display: none; } }
+    @@media (pointer: coarse) { .dpad-large    { display: none; } }
 </style>
 
 <div class="play-wrap">
@@ -164,6 +199,20 @@
                 <div class="player-label">You are</div>
                 <div class="player-name" id="player-name">Rocket</div>
             </div>
+        </div>
+
+        <div class="dpad-large">
+            <div class="gap"></div>
+            <button class="arrow-btn" data-dir="up">↑</button>
+            <div class="gap"></div>
+
+            <button class="arrow-btn" data-dir="left">←</button>
+            <div class="gap"></div>
+            <button class="arrow-btn" data-dir="right">→</button>
+
+            <div class="gap"></div>
+            <button class="arrow-btn" data-dir="down">↓</button>
+            <div class="gap"></div>
         </div>
 
         <div class="joystick-base" id="joystick-base">
@@ -278,6 +327,21 @@ async function leave() {
         try { await fetch(`/api/objects/${id}`, { method: 'DELETE' }); } catch { /* ignore */ }
     }
 }
+
+// ── D-Pad binding (fine pointer) ──────────────────────────
+document.querySelectorAll('.arrow-btn').forEach(btn => {
+    const dir = btn.dataset.dir;
+    btn.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        btn.setPointerCapture(e.pointerId);
+        btn.classList.add('pressing');
+        startMove(dir);
+    }, { passive: false });
+    const end = () => { btn.classList.remove('pressing'); stopMove(); };
+    btn.addEventListener('pointerup',     end);
+    btn.addEventListener('pointercancel', end);
+    btn.addEventListener('contextmenu',   e => e.preventDefault());
+});
 
 // ── Joystick ──────────────────────────────────────────────
 const joystickBase  = document.getElementById('joystick-base');
