@@ -21,9 +21,6 @@ public class SseClientManager
 
     public int ConnectedClients => _clients.Count;
 
-    public async Task BroadcastAsync(SseItem<string> item)
-    {
-        foreach (var channel in _clients.Values)
-            await channel.Writer.WriteAsync(item);
-    }
+    public Task BroadcastAsync(SseItem<string> item) =>
+        Task.WhenAll(_clients.Values.Select(ch => ch.Writer.WriteAsync(item).AsTask()));
 }
