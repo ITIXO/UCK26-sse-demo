@@ -1,0 +1,358 @@
+@page
+@model SseDemo.Pages.DemoModel
+@{
+    ViewData["Title"] = "Live Demo";
+}
+
+<style>
+    /* ── Layout ─────────────────────────────────────────── */
+    .demo-grid {
+        display: grid;
+        gap: 1.5rem;
+        margin-top: 1rem;
+    }
+
+    /* ── Connection status ───────────────────────────────── */
+    #sse-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        padding: 0.3rem 0.8rem;
+        border-radius: 999px;
+        margin-bottom: 1rem;
+        transition: all 0.3s;
+    }
+    #sse-status.connecting { background: #fef3c7; color: #92400e; }
+    #sse-status.connected  { background: #d1fae5; color: #065f46; }
+    #sse-status.error      { background: #fee2e2; color: #991b1b; }
+    .pulse {
+        width: 8px; height: 8px; border-radius: 50%;
+        animation: pulse 1.5s infinite;
+    }
+    .connecting .pulse { background: #f59e0b; }
+    .connected  .pulse { background: #10b981; }
+    .error      .pulse { background: #ef4444; animation: none; }
+    @@keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50%       { opacity: 0.5; transform: scale(1.4); }
+    }
+
+    /* ── Card ────────────────────────────────────────────── */
+    .demo-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .demo-card-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.85rem 1.25rem;
+        border-bottom: 1px solid #e5e7eb;
+        background: #f9fafb;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+    .demo-card-body { padding: 1.25rem; }
+
+    /* ── Notification bar ────────────────────────────────── */
+    #notif-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 22px;
+        height: 22px;
+        padding: 0 6px;
+        border-radius: 999px;
+        background: #6366f1;
+        color: #fff;
+        font-size: 0.78rem;
+        font-weight: 700;
+        margin-left: auto;
+    }
+    #notif-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        max-height: 220px;
+        overflow-y: auto;
+    }
+    .notif-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.6rem;
+        padding: 0.6rem 0.8rem;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        background: #f9fafb;
+        font-size: 0.9rem;
+        transition: background 0.4s, border-color 0.4s;
+        animation: slideIn 0.3s ease;
+    }
+    .notif-item.new {
+        background: #eef2ff;
+        border-color: #a5b4fc;
+    }
+    .notif-time {
+        color: #9ca3af;
+        font-size: 0.78rem;
+        white-space: nowrap;
+        padding-top: 1px;
+    }
+    .notif-empty {
+        color: #9ca3af;
+        font-size: 0.9rem;
+        text-align: center;
+        padding: 1rem 0;
+    }
+    @@keyframes slideIn {
+        from { opacity: 0; transform: translateY(-8px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Chart ───────────────────────────────────────────── */
+    #salesChart {
+        width: 100%;
+        height: 260px;
+        display: block;
+    }
+
+</style>
+
+<div>
+    <div id="sse-status" class="connecting">
+        <span class="pulse"></span>
+        <span id="sse-status-text">Connecting…</span>
+    </div>
+
+    <div class="demo-grid">
+
+        <!-- ── Notifications ─────────────────────────────────── -->
+        <div class="demo-card">
+            <div class="demo-card-header">
+                🔔 Notifications
+                <span id="notif-badge">0</span>
+            </div>
+            <div class="demo-card-body">
+                <div id="notif-list">
+                    <div class="notif-empty" id="notif-empty">No notifications yet — send one from the Trigger page.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Live Sales Chart ───────────────────────────────── -->
+        <div class="demo-card">
+            <div class="demo-card-header">
+                📊 Live Sales Volume
+                <span id="total-sales" style="margin-left:auto;font-size:0.85rem;color:#6366f1;font-weight:600;"></span>
+            </div>
+            <div class="demo-card-body" style="padding:0.75rem 1rem 1rem;">
+                <canvas id="salesChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────
+//  NOTIFICATIONS
+// ─────────────────────────────────────────────────────────
+let notifCount = 0;
+
+function addNotification(msg) {
+    notifCount++;
+    document.getElementById('notif-badge').textContent = notifCount;
+
+    const empty = document.getElementById('notif-empty');
+    if (empty) empty.remove();
+
+    const list = document.getElementById('notif-list');
+    const item = document.createElement('div');
+    item.className = 'notif-item new';
+    item.innerHTML = `<span class="notif-time">${now()}</span><span>${escHtml(msg)}</span>`;
+    list.insertBefore(item, list.firstChild);
+
+    setTimeout(() => item.classList.remove('new'), 2500);
+
+    // keep last 8
+    while (list.children.length > 8) list.removeChild(list.lastChild);
+}
+
+// ─────────────────────────────────────────────────────────
+//  LIVE SALES CHART
+// ─────────────────────────────────────────────────────────
+const MAX_POINTS = 20;
+const salesData  = [];    // { label: string, value: number }
+let   totalSales = 0;
+
+const canvas = document.getElementById('salesChart');
+const ctx    = canvas.getContext('2d');
+
+function resizeCanvas() {
+    canvas.width  = canvas.offsetWidth  * devicePixelRatio;
+    canvas.height = canvas.offsetHeight * devicePixelRatio;
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+    drawChart();
+}
+
+function addSale(amount) {
+    totalSales += amount;
+    document.getElementById('total-sales').textContent =
+        `Total: $${totalSales.toFixed(2)}`;
+
+    salesData.push({ label: now(), value: amount });
+    if (salesData.length > MAX_POINTS) salesData.shift();
+    drawChart();
+}
+
+function drawChart() {
+    const W  = canvas.offsetWidth;
+    const H  = canvas.offsetHeight;
+    const pd = { top: 20, right: 20, bottom: 36, left: 60 };
+
+    ctx.clearRect(0, 0, W, H);
+
+    if (salesData.length === 0) {
+        ctx.fillStyle   = '#9ca3af';
+        ctx.font        = '14px system-ui';
+        ctx.textAlign   = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Waiting for sales data…', W / 2, H / 2);
+        return;
+    }
+
+    const values    = salesData.map(d => d.value);
+    const rawMax    = Math.max(...values);
+    const maxVal    = rawMax > 0 ? rawMax * 1.25 : 100;
+    const chartW    = W - pd.left - pd.right;
+    const chartH    = H - pd.top  - pd.bottom;
+    const GRID_ROWS = 4;
+
+    // grid + Y labels
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= GRID_ROWS; i++) {
+        const y   = pd.top + (chartH / GRID_ROWS) * i;
+        const val = maxVal - (maxVal / GRID_ROWS) * i;
+        ctx.strokeStyle = '#f3f4f6';
+        ctx.beginPath(); ctx.moveTo(pd.left, y); ctx.lineTo(W - pd.right, y); ctx.stroke();
+        ctx.fillStyle    = '#9ca3af';
+        ctx.font         = '11px system-ui';
+        ctx.textAlign    = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`$${val.toFixed(0)}`, pd.left - 6, y);
+    }
+
+    // axes
+    ctx.strokeStyle = '#d1d5db';
+    ctx.lineWidth   = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(pd.left, pd.top);
+    ctx.lineTo(pd.left, H - pd.bottom);
+    ctx.lineTo(W - pd.right, H - pd.bottom);
+    ctx.stroke();
+
+    const getX = i => pd.left + (i / (MAX_POINTS - 1)) * chartW;
+    const getY = v => pd.top + chartH - (v / maxVal) * chartH;
+    const offset = MAX_POINTS - salesData.length;
+
+    // fill area
+    ctx.beginPath();
+    salesData.forEach((d, i) => {
+        const x = getX(i + offset), y = getY(d.value);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.lineTo(getX(salesData.length - 1 + offset), H - pd.bottom);
+    ctx.lineTo(getX(offset), H - pd.bottom);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(99,102,241,0.1)';
+    ctx.fill();
+
+    // line
+    ctx.beginPath();
+    ctx.strokeStyle = '#6366f1';
+    ctx.lineWidth   = 2.5;
+    ctx.lineJoin    = 'round';
+    salesData.forEach((d, i) => {
+        const x = getX(i + offset), y = getY(d.value);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    // dots
+    salesData.forEach((d, i) => {
+        const x = getX(i + offset), y = getY(d.value);
+        ctx.beginPath();
+        ctx.arc(x, y, 4.5, 0, Math.PI * 2);
+        ctx.fillStyle   = '#6366f1';
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth   = 2;
+        ctx.stroke();
+    });
+
+    // X-axis labels (every 4 points + last)
+    ctx.fillStyle    = '#9ca3af';
+    ctx.font         = '10px system-ui';
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'top';
+    salesData.forEach((d, i) => {
+        if (i % 4 === 0 || i === salesData.length - 1) {
+            ctx.fillText(d.label, getX(i + offset), H - pd.bottom + 6);
+        }
+    });
+}
+
+// ─────────────────────────────────────────────────────────
+//  SSE CONNECTION
+// ─────────────────────────────────────────────────────────
+const statusEl   = document.getElementById('sse-status');
+const statusText = document.getElementById('sse-status-text');
+
+function setStatus(state, text) {
+    statusEl.className = `connecting ${state}`;  // reset then set
+    statusEl.className = state;
+    statusText.textContent = text;
+}
+
+function connect() {
+    setStatus('connecting', 'Connecting…');
+    const es = new EventSource('/sse');
+
+    es.addEventListener('connected', () => {
+        setStatus('connected', 'Connected — live updates active');
+    });
+
+    es.addEventListener('notification', e => addNotification(e.data));
+
+    es.addEventListener('sale', e => {
+        const amount = parseFloat(e.data);
+        if (!isNaN(amount)) addSale(amount);
+    });
+
+    es.onerror = () => {
+        setStatus('error', 'Connection lost — reconnecting…');
+    };
+}
+
+// ─────────────────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────────────────
+function now() {
+    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ─────────────────────────────────────────────────────────
+//  BOOT
+// ─────────────────────────────────────────────────────────
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+connect();
+</script>

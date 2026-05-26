@@ -1,0 +1,234 @@
+@page
+@model SseDemo.Pages.TriggerModel
+@{
+    ViewData["Title"] = "Event Trigger";
+}
+
+<style>
+    .trigger-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1rem;
+    }
+
+    .trigger-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+
+    .trigger-card-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.85rem 1.25rem;
+        border-bottom: 1px solid #e5e7eb;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    .trigger-card-body {
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    /* colour accents per card */
+    .card-notify .trigger-card-header { background: #eef2ff; border-bottom-color: #c7d2fe; }
+    .card-sale   .trigger-card-header { background: #ecfdf5; border-bottom-color: #a7f3d0; }
+
+    .trigger-card label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.25rem;
+        display: block;
+    }
+
+    .trigger-card input[type="text"],
+    .trigger-card input[type="number"] {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        outline: none;
+    }
+    .trigger-card input:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+    }
+
+    .trigger-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        padding: 0.55rem 1.1rem;
+        border-radius: 8px;
+        border: none;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity 0.15s, transform 0.1s;
+    }
+    .trigger-btn:active { transform: scale(0.97); }
+    .trigger-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .btn-notify { background: #6366f1; color: #fff; }
+    .btn-sale   { background: #10b981; color: #fff; }
+
+
+
+    /* feedback toast */
+    .feedback {
+        font-size: 0.82rem;
+        min-height: 1.2em;
+        border-radius: 6px;
+        padding: 0.25rem 0.5rem;
+        transition: opacity 0.4s;
+    }
+    .feedback.ok  { color: #065f46; background: #d1fae5; }
+    .feedback.err { color: #991b1b; background: #fee2e2; }
+    .feedback.hidden { opacity: 0; }
+
+    /* quick fire buttons for sale */
+    .quick-amounts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+    }
+    .quick-btn {
+        padding: 0.3rem 0.7rem;
+        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        background: #f9fafb;
+        font-size: 0.82rem;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+    }
+    .quick-btn:hover { background: #ecfdf5; border-color: #10b981; color: #065f46; }
+
+    /* hint */
+    .hint-bar {
+        background: #f0f9ff;
+        border: 1px solid #bae6fd;
+        border-radius: 8px;
+        padding: 0.65rem 1rem;
+        font-size: 0.87rem;
+        color: #0369a1;
+        margin-bottom: 0.5rem;
+    }
+</style>
+
+<div class="hint-bar">
+    💡 Open the <a href="/Demo" target="_blank">📺 Live Demo</a>, <a href="/Mover" target="_blank">🚀 Rocket Mover</a>, or <a href="/Play" target="_blank">🎮 Play</a> in another tab, then fire events from here.
+</div>
+
+<div class="trigger-grid">
+
+    <!-- ── NOTIFICATION ──────────────────────────────────── -->
+    <div class="trigger-card card-notify">
+        <div class="trigger-card-header">🔔 Send Notification</div>
+        <div class="trigger-card-body">
+            <div>
+                <label for="notif-msg">Message</label>
+                <input id="notif-msg" type="text" placeholder="e.g. New order received!" maxlength="200" />
+            </div>
+            <button class="trigger-btn btn-notify" onclick="sendNotification()">
+                📤 Send Notification
+            </button>
+            <div class="feedback hidden" id="notif-feedback"></div>
+        </div>
+    </div>
+
+    <!-- ── SALE ──────────────────────────────────────────── -->
+    <div class="trigger-card card-sale">
+        <div class="trigger-card-header">💰 Simulate Sale</div>
+        <div class="trigger-card-body">
+            <div>
+                <label for="sale-amount">Amount ($)</label>
+                <input id="sale-amount" type="number" placeholder="e.g. 149.99" min="0" step="0.01" />
+            </div>
+            <div>
+                <label>Quick amounts</label>
+                <div class="quick-amounts">
+                    <button class="quick-btn" onclick="quickSale(9.99)">$9.99</button>
+                    <button class="quick-btn" onclick="quickSale(49.99)">$49.99</button>
+                    <button class="quick-btn" onclick="quickSale(99.99)">$99.99</button>
+                    <button class="quick-btn" onclick="quickSale(249.00)">$249</button>
+                    <button class="quick-btn" onclick="quickSale(Math.round(Math.random()*500*100)/100)">🎲 Random</button>
+                </div>
+            </div>
+            <button class="trigger-btn btn-sale" onclick="sendSale()">
+                📈 Record Sale
+            </button>
+            <div class="feedback hidden" id="sale-feedback"></div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────
+//  Shared POST helper
+// ─────────────────────────────────────────────────────────
+async function post(url, body, feedbackId) {
+    const fb = document.getElementById(feedbackId);
+    try {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        if (res.ok) {
+            const data = await res.json();
+            showFeedback(fb, `✓ Sent! (${data.clients ?? '?'} listener${data.clients !== 1 ? 's' : ''} connected)`, 'ok');
+        } else {
+            const text = await res.text();
+            showFeedback(fb, `✗ Error: ${text}`, 'err');
+        }
+    } catch (e) {
+        showFeedback(fb, `✗ Network error: ${e.message}`, 'err');
+    }
+}
+
+function showFeedback(el, msg, type) {
+    el.textContent   = msg;
+    el.className     = `feedback ${type}`;
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.className = 'feedback hidden', 4000);
+}
+
+// ─────────────────────────────────────────────────────────
+//  Actions
+// ─────────────────────────────────────────────────────────
+function sendNotification() {
+    const msg = document.getElementById('notif-msg').value.trim();
+    if (!msg) { alert('Please enter a message.'); return; }
+    post('/api/notify', { message: msg }, 'notif-feedback');
+    document.getElementById('notif-msg').value = '';
+}
+
+function sendSale() {
+    const raw    = document.getElementById('sale-amount').value;
+    const amount = parseFloat(raw);
+    if (isNaN(amount) || amount < 0) { alert('Please enter a valid amount.'); return; }
+    post('/api/sale', { amount }, 'sale-feedback');
+    document.getElementById('sale-amount').value = '';
+}
+
+function quickSale(amount) {
+    document.getElementById('sale-amount').value = amount.toFixed(2);
+    post('/api/sale', { amount }, 'sale-feedback');
+}
+
+// Allow Enter key on inputs
+document.getElementById('notif-msg').addEventListener('keydown', e => e.key === 'Enter' && sendNotification());
+document.getElementById('sale-amount').addEventListener('keydown', e => e.key === 'Enter' && sendSale());
+</script>

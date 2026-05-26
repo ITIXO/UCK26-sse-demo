@@ -1,0 +1,70 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<style>
+    .hero {
+        text-align: center;
+        padding: 3rem 1rem 2rem;
+    }
+    .hero h1 { font-size: 2.4rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .hero p   { color: #6b7280; font-size: 1.05rem; max-width: 520px; margin: 0 auto 2rem; }
+    .hero-cards {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+    }
+    .hero-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 2rem 2.5rem;
+        border-radius: 14px;
+        border: 1px solid #e5e7eb;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(0,0,0,.07);
+        text-decoration: none;
+        color: inherit;
+        transition: transform 0.15s, box-shadow 0.15s;
+        min-width: 220px;
+    }
+    .hero-card:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,.12); }
+    .hero-card .icon { font-size: 2.5rem; }
+    .hero-card h2    { font-size: 1.15rem; font-weight: 700; margin: 0; }
+    .hero-card p     { font-size: 0.85rem; color: #6b7280; margin: 0; text-align: center; }
+    .badge-sse {
+        display: inline-block;
+        background: #6366f1;
+        color: #fff;
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 0.15rem 0.55rem;
+        border-radius: 999px;
+        letter-spacing: 0.04em;
+    }
+</style>
+
+<div class="hero">
+    <h1>🌐 SSE Demo</h1>
+    <p>
+        A real-time demo using <span class="badge-sse">Server-Sent Events</span> in .NET 10 &amp; the browser's
+        <code>EventSource</code> API — no WebSockets, no frameworks.
+    </p>
+    <div class="hero-cards">
+        <a href="/Demo" class="hero-card">
+            <span class="icon">📺</span>
+            <h2>Live Demo</h2>
+            <p>Notifications, a live sales chart and a news ticker — all pushed from the server.</p>
+        </a>
+        <a href="/Trigger" class="hero-card">
+            <span class="icon">🎛️</span>
+            <h2>Event Trigger</h2>
+            <p>Send notifications, record sales and broadcast news headlines via HTTP POST.</p>
+        </a>
+    </div>
+</div>
+

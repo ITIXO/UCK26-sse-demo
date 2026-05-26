@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Home - SseDemo</title>
+    <script type="importmap">{
+  "imports": {
+    "./js/site.js": "./js/site.xtxxf3hu2r.js",
+    "./lib/bootstrap/dist/js/bootstrap.bundle.js": "./lib/bootstrap/dist/js/bootstrap.bundle.6cfz1n2cew.js",
+    "./lib/bootstrap/dist/js/bootstrap.bundle.min.js": "./lib/bootstrap/dist/js/bootstrap.bundle.min.493y06b0oq.js",
+    "./lib/bootstrap/dist/js/bootstrap.esm.min.js": "./lib/bootstrap/dist/js/bootstrap.esm.min.jj8uyg4cgr.js",
+    "./lib/bootstrap/dist/js/bootstrap.esm.js": "./lib/bootstrap/dist/js/bootstrap.esm.vr1egmr9el.js",
+    "./lib/bootstrap/dist/js/bootstrap.min.js": "./lib/bootstrap/dist/js/bootstrap.min.63fj8s7r0e.js",
+    "./lib/bootstrap/dist/js/bootstrap.js": "./lib/bootstrap/dist/js/bootstrap.notf2xhcfb.js",
+    "./lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.js": "./lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.47otxtyo56.js",
+    "./lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js": "./lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.4v8eqarkd7.js",
+    "./lib/jquery-validation/dist/additional-methods.js": "./lib/jquery-validation/dist/additional-methods.83jwlth58m.js",
+    "./lib/jquery-validation/dist/additional-methods.min.js": "./lib/jquery-validation/dist/additional-methods.min.mrlpezrjn3.js",
+    "./lib/jquery-validation/dist/jquery.validate.js": "./lib/jquery-validation/dist/jquery.validate.lzl9nlhx6b.js",
+    "./lib/jquery-validation/dist/jquery.validate.min.js": "./lib/jquery-validation/dist/jquery.validate.min.ag7o75518u.js",
+    "./lib/jquery/dist/jquery.js": "./lib/jquery/dist/jquery.0i3buxo5is.js",
+    "./lib/jquery/dist/jquery.min.js": "./lib/jquery/dist/jquery.min.o1o13a6vjx.js",
+    "./lib/jquery/dist/jquery.slim.js": "./lib/jquery/dist/jquery.slim.2z0ns9nrw6.js",
+    "./lib/jquery/dist/jquery.slim.min.js": "./lib/jquery/dist/jquery.slim.min.muycvpuwrr.js"
+  }
+}</script>
+    <link rel="stylesheet" href="/lib/bootstrap/dist/css/bootstrap.min.46ein0sx1k.css" />
+    <link rel="stylesheet" href="/css/site.b9sayid5wm.css" />
+    <link rel="stylesheet" href="/SseDemo.ii8pcgkeav.styles.css" />
+</head>
+<body>
+    <header b-t050mla6kp>
+        <nav b-t050mla6kp class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div b-t050mla6kp class="container">
+                <a class="navbar-brand" href="/">SseDemo</a>
+                <button b-t050mla6kp class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span b-t050mla6kp class="navbar-toggler-icon"></span>
+                </button>
+                <div b-t050mla6kp class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul b-t050mla6kp class="navbar-nav flex-grow-1">
+                        <li b-t050mla6kp class="nav-item">
+                            <a class="nav-link text-dark" href="/">Home</a>
+                        </li>
+                        <li b-t050mla6kp class="nav-item">
+                            <a class="nav-link text-dark" href="/Demo">📺 Live Demo</a>
+                        </li>
+                        <li b-t050mla6kp class="nav-item">
+                            <a class="nav-link text-dark" href="/Trigger">🎛️ Event Trigger</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div b-t050mla6kp class="container">
+        <main b-t050mla6kp role="main" class="pb-3">
+            
+<style>
+    .hero {
+        text-align: center;
+        padding: 3rem 1rem 2rem;
+    }
+    .hero h1 { font-size: 2.4rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .hero p   { color: #6b7280; font-size: 1.05rem; max-width: 520px; margin: 0 auto 2rem; }
+    .hero-cards {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+    }
+    .hero-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 2rem 2.5rem;
+        border-radius: 14px;
+        border: 1px solid #e5e7eb;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(0,0,0,.07);
+        text-decoration: none;
+        color: inherit;
+        transition: transform 0.15s, box-shadow 0.15s;
+        min-width: 220px;
+    }
+    .hero-card:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,.12); }
+    .hero-card .icon { font-size: 2.5rem; }
+    .hero-card h2    { font-size: 1.15rem; font-weight: 700; margin: 0; }
+    .hero-card p     { font-size: 0.85rem; color: #6b7280; margin: 0; text-align: center; }
+    .badge-sse {
+        display: inline-block;
+        background: #6366f1;
+        color: #fff;
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 0.15rem 0.55rem;
+        border-radius: 999px;
+        letter-spacing: 0.04em;
+    }
+</style>
+
+<div class="hero">
+    <h1>🌐 SSE Demo</h1>
+    <p>
+        A real-time demo using <span class="badge-sse">Server-Sent Events</span> in .NET 10 &amp; the browser's
+        <code>EventSource</code> API — no WebSockets, no frameworks.
+    </p>
+    <div class="hero-cards">
+        <a href="/Demo" class="hero-card">
+            <span class="icon">📺</span>
+            <h2>Live Demo</h2>
+            <p>Notifications, a live sales chart and a news ticker — all pushed from the server.</p>
+        </a>
+        <a href="/Trigger" class="hero-card">
+            <span class="icon">🎛️</span>
+            <h2>Event Trigger</h2>
+            <p>Send notifications, record sales and broadcast news headlines via HTTP POST.</p>
+        </a>
+    </div>
+</div>
+
+
+        </main>
+    </div>
+
+    <footer b-t050mla6kp class="border-top footer text-muted">
+        <div b-t050mla6kp class="container">
+            &copy; 2026 - SseDemo - <a href="/Privacy">Privacy</a>
+        </div>
+    </footer>
+
+    <script src="/lib/jquery/dist/jquery.min.o1o13a6vjx.js"></script>
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.493y06b0oq.js"></script>
+    <script src="/js/site.xtxxf3hu2r.js"></script>
+
+    
+</body>
+</html>
