@@ -153,10 +153,14 @@
     .joystick-hints span {
         position: absolute;
     }
-    .joystick-hints .h-up    { top: 10px;    left: 50%; transform: translateX(-50%); }
-    .joystick-hints .h-down  { bottom: 10px; left: 50%; transform: translateX(-50%); }
-    .joystick-hints .h-left  { left: 10px;   top: 50%;  transform: translateY(-50%); }
-    .joystick-hints .h-right { right: 10px;  top: 50%;  transform: translateY(-50%); }
+    .joystick-hints .h-up         { top: 10px;    left: 50%; transform: translateX(-50%); }
+    .joystick-hints .h-down       { bottom: 10px; left: 50%; transform: translateX(-50%); }
+    .joystick-hints .h-left       { left: 10px;   top: 50%;  transform: translateY(-50%); }
+    .joystick-hints .h-right      { right: 10px;  top: 50%;  transform: translateY(-50%); }
+    .joystick-hints .h-up-left    { top: 14px;    left: 14px; }
+    .joystick-hints .h-up-right   { top: 14px;    right: 14px; }
+    .joystick-hints .h-down-left  { bottom: 14px; left: 14px; }
+    .joystick-hints .h-down-right { bottom: 14px; right: 14px; }
 
     /* ── Leave button ────────────────────────────────────── */
     .leave-btn {
@@ -221,6 +225,10 @@
                 <span class="h-down">↓</span>
                 <span class="h-left">←</span>
                 <span class="h-right">→</span>
+                <span class="h-up-left">↖</span>
+                <span class="h-up-right">↗</span>
+                <span class="h-down-left">↙</span>
+                <span class="h-down-right">↘</span>
             </div>
             <div class="joystick-thumb" id="joystick-thumb"></div>
         </div>
@@ -352,8 +360,15 @@ const MAX_TRAVEL = 62;   // px — thumb clamped to this radius
 let joystickDir = null;
 
 function joystickDirection(dx, dy) {
-    if (Math.abs(dx) >= Math.abs(dy)) return dx > 0 ? 'right' : 'left';
-    return dy > 0 ? 'down' : 'up';
+    const angle = ((Math.atan2(dy, dx) * 180 / Math.PI) + 360) % 360;
+    if (angle < 22.5  || angle >= 337.5) return 'right';
+    if (angle < 67.5)                    return 'down-right';
+    if (angle < 112.5)                   return 'down';
+    if (angle < 157.5)                   return 'down-left';
+    if (angle < 202.5)                   return 'left';
+    if (angle < 247.5)                   return 'up-left';
+    if (angle < 292.5)                   return 'up';
+    return 'up-right';
 }
 
 function setThumb(dx, dy, dist) {

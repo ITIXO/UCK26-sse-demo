@@ -51,8 +51,8 @@ app.MapPost("/api/sale", async (SaleRequest req, SseClientManager manager) =>
 app.MapPost("/api/move", async (MoveRequest req, GameStateService game, SseClientManager sse) =>
 {
     var dir = req.Direction?.ToLowerInvariant();
-    if (dir is not ("up" or "down" or "left" or "right"))
-        return Results.BadRequest("Direction must be up, down, left, or right.");
+    if (dir is not ("up" or "down" or "left" or "right" or "up-left" or "up-right" or "down-left" or "down-right"))
+        return Results.BadRequest("Direction must be up, down, left, right, up-left, up-right, down-left, or down-right.");
     if (string.IsNullOrWhiteSpace(req.Id))
         return Results.BadRequest("Id is required.");
     var updated = game.Move(req.Id, dir);
