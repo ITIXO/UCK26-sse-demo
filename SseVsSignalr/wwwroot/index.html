@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSE vs SignalR — Throughput Demo</title>
+  <style>
+    :root {
+      --bg:         #f8fafc;
+      --surface:    #ffffff;
+      --surface2:   #f1f5f9;
+      --border:     #e2e8f0;
+      --text:       #0f172a;
+      --text-dim:   #64748b;
+      --sse:        #0284c7;
+      --sr:         #ea580c;
+      --success:    #059669;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      gap: 40px;
+    }
+    h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--sse), var(--sr));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    p { color: var(--text-dim); font-size: 1rem; max-width: 500px; text-align: center; line-height: 1.6; }
+    .cards {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .card {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 32px 40px;
+      text-align: center;
+      border: 2px solid var(--border);
+      text-decoration: none;
+      color: var(--text);
+      width: 220px;
+      transition: all 0.2s;
+    }
+    .card:hover { transform: translateY(-4px); }
+    .card.sse { border-color: var(--sse); }
+    .card.sr { border-color: var(--sr); }
+    .card-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .card-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 4px; }
+    .card.sse .card-title { color: var(--sse); }
+    .card.sr .card-title { color: var(--sr); }
+    .card-sub { font-size: 0.8rem; color: var(--text-dim); }
+    .steps {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 32px;
+      max-width: 500px;
+      width: 100%;
+    }
+    .steps h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 16px; }
+    .step { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px; font-size: 0.9rem; }
+    .step-num {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      width: 24px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 700; flex-shrink: 0;
+      color: var(--text);
+    }
+    code { background: var(--surface2); padding: 1px 6px; border-radius: 4px; font-family: Consolas, monospace; font-size: 0.85rem; color: var(--sse); }
+  </style>
+</head>
+<body>
+  <h1>⚡ SSE vs SignalR</h1>
+  <p>A throughput comparison demo using ASP.NET Core 10 native SSE (<code>TypedResults.ServerSentEvents</code>) vs SignalR WebSockets.</p>
+
+  <div class="cards">
+    <a class="card sse" href="/sse.html" target="_blank">
+      <div class="card-icon">📡</div>
+      <div class="card-title">SSE</div>
+      <div class="card-sub">Server-Sent Events<br>TypedResults.ServerSentEvents</div>
+    </a>
+    <a class="card sr" href="/signalr.html" target="_blank">
+      <div class="card-icon">🔌</div>
+      <div class="card-title">SignalR</div>
+      <div class="card-sub">WebSocket Hub<br>IHubContext broadcast</div>
+    </a>
+  </div>
+
+  <div class="steps">
+    <h2>How to use</h2>
+    <div class="step"><div class="step-num">1</div><span>Open both pages in separate browser windows and place them side by side.</span></div>
+    <div class="step"><div class="step-num">2</div><span>Wait for both pages to show <strong>Connected</strong> status.</span></div>
+    <div class="step"><div class="step-num">3</div><span>Click <strong>▶ Start Test</strong> on either page — it triggers both channels simultaneously.</span></div>
+    <div class="step"><div class="step-num">4</div><span>Watch the throughput metrics update live and compare the final results.</span></div>
+  </div>
+</body>
+</html>

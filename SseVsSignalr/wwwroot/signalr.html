@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SignalR — Throughput</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"
+          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <style>
+    :root {
+      --accent:     #ea580c;
+      --accent-dim: #c2410c;
+      --bg:         #f8fafc;
+      --surface:    #ffffff;
+      --surface2:   #f1f5f9;
+      --border:     #e2e8f0;
+      --text:       #0f172a;
+      --text-dim:   #64748b;
+      --success:    #059669;
+      --danger:     #dc2626;
+      --warn:       #b45309;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ───────────────────────────────── */
+    .header {
+      background: var(--surface);
+      border-bottom: 2px solid var(--accent);
+      padding: 18px 28px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .badge {
+      background: var(--accent);
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+    .header-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .header-sub {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      font-family: Consolas, monospace;
+    }
+    .conn-status {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+    }
+    .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      transition: all 0.3s;
+    }
+    .dot.connected  { background: var(--success); box-shadow: 0 0 8px var(--success); }
+    .dot.error      { background: var(--danger); }
+    .dot.connecting { background: var(--warn); animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+    /* ── Controls ─────────────────────────────── */
+    .controls {
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .controls label { font-size: 0.85rem; color: var(--text-dim); }
+    input[type="number"] {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 7px 12px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      width: 130px;
+    }
+    input[type="number"]:focus { outline: none; border-color: var(--accent); }
+    button {
+      padding: 8px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: filter 0.15s;
+    }
+    button:hover:not(:disabled) { filter: brightness(1.15); }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    #startBtn { background: var(--accent); color: #fff; }
+    #resetBtn  { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+    .test-status { font-size: 0.82rem; color: var(--text-dim); margin-left: 4px; }
+
+    /* ── Main ─────────────────────────────────── */
+    .content {
+      flex: 1;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* ── Stat cards ───────────────────────────── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 22px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.07);
+    }
+    .stat-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+    .stat-value {
+      font-size: 2.2rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .unit { font-size: 0.8rem; font-weight: 400; color: var(--text-dim); margin-left: 4px; }
+
+    /* ── Progress ─────────────────────────────── */
+    .progress-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 22px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.07);
+    }
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+    }
+    .progress-bar { height: 10px; background: var(--surface2); border-radius: 5px; overflow: hidden; }
+    .progress-fill {
+      height: 100%; width: 0%;
+      border-radius: 5px;
+      background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+      transition: width 0.1s;
+    }
+
+    /* ── Result ───────────────────────────────── */
+    .result-card {
+      background: var(--surface);
+      border: 1px solid var(--success);
+      border-radius: 12px;
+      padding: 26px;
+      text-align: center;
+      display: none;
+    }
+    .result-card.show { display: block; }
+    .result-tag {
+      display: inline-block;
+      background: var(--success);
+      color: #000;
+      font-weight: 700;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      padding: 3px 10px;
+      border-radius: 4px;
+      margin-bottom: 14px;
+    }
+    .result-value {
+      font-size: 3.2rem;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .result-detail { font-size: 0.88rem; color: var(--text-dim); }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <span class="badge">SignalR</span>
+    <span class="header-title">SignalR WebSocket Hub</span>
+    <div style="flex:1">
+      <div class="header-sub">ASP.NET Core 10 · IHubContext broadcast · @microsoft/signalr</div>
+    </div>
+    <div class="conn-status">
+      <div class="dot connecting" id="dot"></div>
+      <span id="connStatus">Connecting…</span>
+    </div>
+  </div>
+
+  <div class="controls">
+    <label for="eventCount">Events:</label>
+    <input type="number" id="eventCount" value="100000" min="1000" max="1000000" step="1000">
+    <button id="startBtn">▶ Start Test</button>
+    <button id="resetBtn">↺ Reset</button>
+    <span class="test-status" id="testStatus"></span>
+  </div>
+
+  <div class="content">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Messages Received</div>
+        <div class="stat-value" id="received">0<span class="unit">msgs</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Current Throughput</div>
+        <div class="stat-value" id="throughput">—<span class="unit">msg/s</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Elapsed</div>
+        <div class="stat-value" id="elapsed">—<span class="unit">s</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Peak Throughput</div>
+        <div class="stat-value" id="peak">—<span class="unit">msg/s</span></div>
+      </div>
+    </div>
+
+    <div class="progress-card">
+      <div class="progress-header">
+        <span>Progress</span>
+        <span>
+          <span id="receivedCount">0</span> / <span id="totalCount">—</span>
+          &nbsp;<strong id="progressPct">0 %</strong>
+        </span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+
+    <div class="result-card" id="resultCard">
+      <div class="result-tag">✓ TEST COMPLETE</div>
+      <div class="result-value" id="resultValue">—</div>
+      <div class="result-detail" id="resultDetail"></div>
+    </div>
+  </div>
+
+  <script>
+    // ── State ──────────────────────────────────────────────
+    const s = {
+      received: 0, total: 0,
+      startTime: null, endTime: null,
+      running: false, completed: false,
+      peak: 0,
+      tickTime: null, tickCount: 0,
+    };
+    let loop = null;
+
+    // ── SignalR ────────────────────────────────────────────
+    async function connect() {
+      const conn = new signalR.HubConnectionBuilder()
+        .withUrl('/hubs/throughput')
+        .withAutomaticReconnect()
+        .configureLogging(signalR.LogLevel.Warning)
+        .build();
+
+      conn.on('ReceiveMessage', data => onMsg(data));
+
+      conn.onreconnecting(() => setConn('connecting', 'Reconnecting…'));
+      conn.onreconnected(() => setConn('connected', 'Connected'));
+      conn.onclose(() => setConn('error', 'Disconnected'));
+
+      try {
+        await conn.start();
+        setConn('connected', 'Connected');
+      } catch {
+        setConn('error', 'Failed to connect — reload to retry');
+      }
+    }
+
+    function setConn(cls, txt) {
+      document.getElementById('dot').className          = 'dot ' + cls;
+      document.getElementById('connStatus').textContent = txt;
+    }
+
+    // ── Message handling ───────────────────────────────────
+    // SignalR deserializes JSON automatically — data is already a plain object
+    function onMsg(data) {
+      if (data.done) {
+        s.endTime   = Date.now();
+        s.running   = false;
+        s.completed = true;
+        finish();
+        return;
+      }
+      if (s.completed || (!s.running && s.received === 0)) {
+        initTest(data.total);
+      }
+      s.received++;
+    }
+
+    function initTest(total) {
+      s.received = 0; s.total = total;
+      s.startTime = Date.now(); s.endTime = null;
+      s.running = true; s.completed = false;
+      s.peak = 0; s.tickTime = Date.now(); s.tickCount = 0;
+      document.getElementById('resultCard').classList.remove('show');
+      document.getElementById('startBtn').disabled       = true;
+      document.getElementById('testStatus').textContent  = 'Receiving…';
+      startLoop();
+    }
+
+    // ── Update loop ────────────────────────────────────────
+    function startLoop() {
+      if (loop) return;
+      loop = setInterval(tick, 150);
+    }
+    function stopLoop() { clearInterval(loop); loop = null; }
+
+    function fmt(n) {
+      if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+      if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+      return Math.round(n).toString();
+    }
+
+    function tick() {
+      const now = Date.now();
+      const elapsed = s.startTime ? ((s.endTime || now) - s.startTime) / 1000 : 0;
+
+      const dtMs    = now - (s.tickTime || now);
+      const dtCount = s.received - s.tickCount;
+      const rolling = dtMs > 0 ? (dtCount / dtMs) * 1000 : 0;
+      s.tickTime  = now;
+      s.tickCount = s.received;
+      if (rolling > s.peak) s.peak = rolling;
+
+      const pct = s.total > 0 ? s.received / s.total * 100 : 0;
+
+      document.getElementById('received').innerHTML     = fmt(s.received)   + '<span class="unit">msgs</span>';
+      document.getElementById('throughput').innerHTML   = fmt(rolling)       + '<span class="unit">msg/s</span>';
+      document.getElementById('elapsed').innerHTML      = elapsed.toFixed(2) + '<span class="unit">s</span>';
+      document.getElementById('peak').innerHTML         = fmt(s.peak)        + '<span class="unit">msg/s</span>';
+      document.getElementById('receivedCount').textContent = s.received.toLocaleString();
+      document.getElementById('totalCount').textContent    = s.total.toLocaleString();
+      document.getElementById('progressPct').textContent   = pct.toFixed(1) + ' %';
+      document.getElementById('progressFill').style.width  = pct + '%';
+    }
+
+    function finish() {
+      tick(); stopLoop();
+      const elapsed = (s.endTime - s.startTime) / 1000;
+      const avg     = s.total / elapsed;
+      document.getElementById('resultValue').innerHTML  =
+        fmt(avg) + '<span class="unit" style="font-size:1.1rem"> msg/s avg</span>';
+      document.getElementById('resultDetail').textContent =
+        `${s.total.toLocaleString()} messages · ${elapsed.toFixed(3)} s · peak ${fmt(s.peak)} msg/s`;
+      document.getElementById('resultCard').classList.add('show');
+      document.getElementById('startBtn').disabled        = false;
+      document.getElementById('testStatus').textContent   = 'Complete!';
+    }
+
+    // ── Controls ───────────────────────────────────────────
+    document.getElementById('startBtn').addEventListener('click', async () => {
+      const count = parseInt(document.getElementById('eventCount').value, 10);
+      document.getElementById('startBtn').disabled       = true;
+      document.getElementById('testStatus').textContent  = 'Starting…';
+      const res = await fetch('/api/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ count }),
+      });
+      if (!res.ok) {
+        const msg = res.status === 409 ? 'Test already running' : 'Error starting test';
+        document.getElementById('testStatus').textContent = msg;
+        document.getElementById('startBtn').disabled = false;
+      }
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      stopLoop();
+      Object.assign(s, { received:0, total:0, startTime:null, endTime:null,
+                         running:false, completed:false, peak:0, tickTime:null, tickCount:0 });
+      document.getElementById('received').innerHTML   = '0<span class="unit">msgs</span>';
+      document.getElementById('throughput').innerHTML = '—<span class="unit">msg/s</span>';
+      document.getElementById('elapsed').innerHTML    = '—<span class="unit">s</span>';
+      document.getElementById('peak').innerHTML       = '—<span class="unit">msg/s</span>';
+      document.getElementById('receivedCount').textContent = '0';
+      document.getElementById('totalCount').textContent    = '—';
+      document.getElementById('progressPct').textContent   = '0 %';
+      document.getElementById('progressFill').style.width  = '0%';
+      document.getElementById('resultCard').classList.remove('show');
+      document.getElementById('startBtn').disabled        = false;
+      document.getElementById('testStatus').textContent   = '';
+    });
+
+    connect();
+  </script>
+</body>
+</html>
